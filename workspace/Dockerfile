@@ -6,8 +6,7 @@ ENV LANG=C.UTF-8
 ARG ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"
 ARG ALPINE_GLIBC_PACKAGE_VERSION="2.28-r0"
 
-### IF you from china###
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+
 
 ## 使用国内时区，日志以中文显示
    
@@ -44,11 +43,14 @@ RUN apk add --no-cache build-base  wget curl busybox  openssh  git && \
     echo "root:root" | chpasswd && \
     ssh-keygen -A
 
+RUN npm install pm2@latest -g && pm2 install typescript
+
+### IF you from china###
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
+
 RUN npm set registry https://registry.npm.taobao.org && \
     npm set disturl https://npm.taobao.org/dist && \
     npm set sass_binary_site https://npm.taobao.org/mirrors/node-sass
-
-RUN npm install pm2@latest -g && pm2 install typescript
 
 WORKDIR /var/www/
 
