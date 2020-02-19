@@ -1,4 +1,3 @@
-ARG NODE_VERSION=12
 FROM node:${NODE_VERSION}-alpine
 
 ENV PM2=pm2-runtime
