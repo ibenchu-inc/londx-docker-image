@@ -37,7 +37,7 @@ RUN ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk"
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"    
         
-RUN apk add --no-cache build-base  wget curl busybox  openssh  git && \
+RUN apk add --no-cache build-base  wget curl busybox  openssh  git python3 && \
     sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config && \
     echo "root:root" | chpasswd && \
     ssh-keygen -A
