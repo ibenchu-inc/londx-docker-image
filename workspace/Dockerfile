@@ -44,6 +44,9 @@ RUN apk add --no-cache build-base  wget curl busybox  openssh  git python3 && \
 
 RUN npm install pm2@latest -g && pm2 install typescript
 
+
+### TEST
+RUN npm install argon2
 ### IF you from china###
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 
