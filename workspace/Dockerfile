@@ -1,56 +1,28 @@
-ARG NODE_VERSION=12
+ARG NODE_VERSION=20
 FROM node:${NODE_VERSION}-alpine
 
-ENV PM2=pm2-runtime
 ENV LANG=C.UTF-8
-ARG ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases/download"
-ARG ALPINE_GLIBC_PACKAGE_VERSION="2.28-r0"
 
-
-
-## 使用国内时区，日志以中文显示
-   
-RUN ALPINE_GLIBC_BASE_PACKAGE_FILENAME="glibc-$ALPINE_GLIBC_PACKAGE_VERSION.apk" && \
-    ALPINE_GLIBC_BIN_PACKAGE_FILENAME="glibc-bin-$ALPINE_GLIBC_PACKAGE_VERSION.apk" && \
-    ALPINE_GLIBC_I18N_PACKAGE_FILENAME="glibc-i18n-$ALPINE_GLIBC_PACKAGE_VERSION.apk" && \
-    apk add --no-cache --virtual=.build-dependencies tzdata wget ca-certificates && \
+# 设置时区为上海，日志中文
+RUN apk add --no-cache tzdata && \
     cp -r -f /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
-    wget -q -O /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub  && \
-    wget \
-        "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_BASE_URL/$ALPINE_GLIBC_PACKAGE_VERSION/$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    apk add --no-cache \
-        "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME" && \
-    \
-    rm "/etc/apk/keys/sgerrand.rsa.pub" && \
-    /usr/glibc-compat/bin/localedef --force --inputfile POSIX --charmap UTF-8 "$LANG" || true && \
-    echo "export LANG=$LANG" > /etc/profile.d/locale.sh && \
-    \
-    apk del glibc-i18n && \
-    \
-    rm "/root/.wget-hsts" && \
-    apk del .build-dependencies && \
-    rm \
-        "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
-        "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"    
-        
-RUN apk add --no-cache build-base  wget curl busybox  openssh  git python3 && \
+    echo "Asia/Shanghai" > /etc/timezone && \
+    apk del tzdata
+
+# 安装常用工具和 SSH
+RUN apk add --no-cache build-base wget curl busybox openssh git python3 && \
     sed -i s/#PermitRootLogin.*/PermitRootLogin\ yes/ /etc/ssh/sshd_config && \
     echo "root:root" | chpasswd && \
     ssh-keygen -A
 
+# 安装 pm2 及 typescript 支持
 RUN npm install pm2@latest -g && pm2 install typescript
 
-
-### TEST
+# TEST: 安装 argon2
 RUN npm install argon2
-### IF you from china###
-RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 
+# 国内源加速
+RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.ustc.edu.cn/g' /etc/apk/repositories
 RUN npm set registry https://registry.npm.taobao.org && \
     npm set disturl https://npm.taobao.org/dist && \
     npm set sass_binary_site https://npm.taobao.org/mirrors/node-sass
@@ -59,4 +31,4 @@ WORKDIR /var/www/
 
 EXPOSE 22
 
-CMD /usr/sbin/sshd -D -e "$@"
+CMD ["/usr/sbin/sshd","-D","-e"]
